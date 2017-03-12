@@ -1,2 +1,0 @@
-# Cadsol
-Logiciel de Gnomonique
