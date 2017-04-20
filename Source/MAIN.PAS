@@ -23,7 +23,6 @@ type
     FileSaveItem: TMenuItem;
     FileSaveAsItem: TMenuItem;
     WindowMinimizeItem: TMenuItem;
-    Timer1: TTimer;
     StatusLine: TPanel;
     FontDialog: TFontDialog;
     PrinterSetupDialog1: TPrinterSetupDialog;
@@ -47,14 +46,6 @@ type
     ImageList1: TImageList;
     ToutFermer2: TMenuItem;
     SiteinternetCadSol1: TMenuItem;
-    CoolBar1: TCoolBar;
-    SpeedPanel: TToolBar;
-    ExitBtn: TSpeedButton;
-    SpeedButton1: TSpeedButton;
-    SaveBtn: TSpeedButton;
-    PrintButton: TSpeedButton;
-    CopyBtn: TSpeedButton;
-    FontBtn: TSpeedButton;
     Cadransimple1: TMenuItem;
     ItemNouveauCadranmultiple: TMenuItem;
     ItemStyle: TMenuItem;
@@ -63,16 +54,25 @@ type
     itemCouleursetEpaisseurs: TMenuItem;
     itemVueen3dimentions: TMenuItem;
     itemOmbredustyle: TMenuItem;
-    N7: TMenuItem;
-    N9: TMenuItem;
     N4: TMenuItem;
     SaveDialog: TFileSaveDialog;
     ItemToutFermer: TMenuItem;
     OpenDialog1: TFileOpenDialog;
     ItemCubique1: TMenuItem;
+    ItemTypedecadran1: TMenuItem;
+    N5: TMenuItem;
+    CoolBar1: TCoolBar;
+    SpeedPanel: TToolBar;
+    ExitBtn: TSpeedButton;
+    SpeedButton1: TSpeedButton;
+    SaveBtn: TSpeedButton;
+    PrintButton: TSpeedButton;
+    FontBtn: TSpeedButton;
+    Fentresflottantes1: TMenuItem;
+    ItemListeFenetres: TMenuItem;
 
     procedure FormCreate(Sender: TObject);
-    procedure FileNewItemClick(Sender: TObject);
+  //  procedure FileNewItemClick(Sender: TObject);
     procedure WindowCascadeItemClick(Sender: TObject);
     procedure UpdateMenuItems(Sender: TObject);
     procedure WindowTileItemClick(Sender: TObject);
@@ -85,7 +85,7 @@ type
     procedure WindowMinimizeItemClick(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure HelpAboutItemClick(Sender: TObject);
-    procedure Timer1Timer(Sender: TObject);
+  //  procedure Timer1Timer(Sender: TObject);
     procedure FontBtnClick(Sender: TObject);
     procedure Configurerlimprimante1Click(Sender: TObject);
     procedure PrintButtonClick(Sender: TObject);
@@ -98,7 +98,7 @@ type
     procedure CopyBtnClick(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure Index1Click(Sender: TObject);
-    procedure Toutfermer1Click(Sender: TObject);
+ //   procedure Toutfermer1Click(Sender: TObject);
     procedure Lisezmoi1Click(Sender: TObject);
     procedure Assistant1Click(Sender: TObject);
 
@@ -116,7 +116,11 @@ type
     procedure OuvrirCadranMultipleClick(Sender: TObject);
     procedure FormActivate(Sender: TObject);
     procedure ItemCubique1Click(Sender: TObject);
-
+    procedure ItemTypedecadran1Click(Sender: TObject);
+    procedure Fentresflottantes1Click(Sender: TObject);
+    procedure Fentresjointivesfixes1Click(Sender: TObject);
+    Procedure FermerLesCadrans(sender: TObject);
+    procedure FormClick(Sender: TObject);
   private
     { Private declarations }
     procedure CreateMDIChild(const Name: string);
@@ -129,6 +133,9 @@ type
     procedure AfficheHeure;
     Procedure AfficheFenetres;
     Procedure DimEtOrientationCadranCubique;
+
+    Procedure MajCadrans;
+    Procedure FixerFonte(var Cadran:TCadran);
     { Public declarations }
   end;
 
@@ -147,12 +154,13 @@ implementation
 
 uses Apropos2, ShellAPI, uCouleurs, Assist, Zoom,
   cadtrace3D, ustyle, Vcl.Themes,
-  Parametre, Heurecad, Position, uViewWin, uCadranMultiple, uVisuCadMultiple;
+  Parametre, Heurecad, Position, uViewWin, uCadranMultiple, uVisuCadMultiple,
+  typeCad, uFenetres;
 
 Procedure TMainForm.AfficheFenetres;
 begin
+ If MainForm.MDIChildCount>0 then begin
   Self.ItemAfficher.Visible := True;
-
   if MainForm.ItemParametrage.Checked then
     Param.Show;
   if MainForm.itemPositionGeographique.Checked then
@@ -163,6 +171,9 @@ begin
     FormCadsol3D.Show;
   if MainForm.itemOmbredustyle.Checked then
     HeureDlg.Show;
+  if MainForm.ItemTypedecadran1.Checked then
+    TypeCadDlg.Show;
+ end;
 end;
 
 procedure TMainForm.AfficheComment;
@@ -222,12 +233,12 @@ begin
   FillChar(UserPol, sizeOf(UserPol), #0);
   GetObject(MainForm.Font.handle, sizeOf(TlogFont), @UserPol);
   UserPol.LfHeight := UserPol.LfHeight * 10;
-  HUserPol := CreateFontIndirect(UserPol);
+  HUserPol:= CreateFontIndirect(UserPol);
   GetObject(HUserPol, sizeOf(TlogFont), @CoordPol);
   CoordPol.LfHeight := 30;
   HCoordPol := CreateFontIndirect(CoordPol);
   Debut := True;
-  Chdir(extractFileDir(paramStr(0)));
+  //Chdir(extractFileDir(paramStr(0)));
 
   Name := 'Menu';
   Ini := TIniFile.Create(ChangeFileExt(application.ExeName, '.INI'));
@@ -242,7 +253,9 @@ begin
       Ini.ReadBool(Name, 'HeureduCadran_Checked', False);
     Self.itemVueen3dimentions.Checked :=
       Ini.ReadBool(Name, 'Vue3D_Checked', False);
-    Style := Ini.ReadString(Name, 'Style', 'Windows');
+    Self.ItemTypedecadran1.Checked :=
+      Ini.ReadBool(Name, 'TypeCadran_Checked', False);
+    Style := Ini.ReadString(Name, 'Style', 'Windows10');
     TStyleManager.TrySetStyle(Style);
   finally
     Ini.Free;
@@ -263,7 +276,7 @@ begin
   ActiveCad.Caption := Name;
   ActiveCad.cadran.Nomfichier := Name;
 end;
-
+(*
 procedure TMainForm.FileNewItemClick(Sender: TObject);
 var
   i: integer;
@@ -277,7 +290,7 @@ begin
   // Mainform.Tile;
   ActiveCad.Caption := 'Nouveau Cadran';
   VisuCadMultipleForm.Visible := False;
-end;
+end; *)
 
 procedure TMainForm.FileCloseItemClick(Sender: TObject);
 var
@@ -298,7 +311,8 @@ var
   Ext, FirstLine: String;
 begin
   FirstLine := 'Ecrasement du fichier existant?';
-  if VisuCadMultipleForm.Visible then
+
+  if CadranMultiple.Typ=multiple then
   begin
     SaveDialog.FileName := ExtractFileName(VisuCadMultipleForm.Caption);
     SaveDialog.FileName:=ChangeFileExt(SaveDialog.FileName, '.cadm');
@@ -320,9 +334,34 @@ begin
       EcrireCadranSolMultiple(cadranMultiple, SaveDialog.FileName);
       VisuCadMultipleForm.Caption := SaveDialog.FileName;
     end;
-  end
-  else
+  end;
+
+  if CadranMultiple.Typ=cubique then
   begin
+    SaveDialog.FileName:=CadranMultiple.NomFichier;
+    SaveDialog.FileName:=ChangeFileExt(SaveDialog.FileName, '.cadc');
+    SaveDialog.FileTypes.Clear;
+    with SaveDialog.FileTypes.Add do
+    begin
+      DisplayName := 'cadran cubique';
+      FileMask := '*.cadc';
+    end;
+    if SaveDialog.Execute then
+    begin
+      if FileExists(SaveDialog.FileName) then
+        if application.messagebox(strPcopy(Buff, FirstLine),
+          strPcopy(Buf, SaveDialog.FileName), mb_yesno or mb_iconquestion) = Id_NO
+        then
+          exit;
+      SaveDialog.FileName:=ChangeFileExt(SaveDialog.FileName, '.cadc');
+      CadranMultiple.NomFichier:=SaveDialog.FileName;
+      EcrireCadranSolMultiple(cadranMultiple, SaveDialog.FileName);
+      VisuCadMultipleForm.Caption := SaveDialog.FileName;
+    end;
+  end;
+
+  if CadranMultiple.Typ=vide then
+    begin
     ActiveCad := TFormCadsol(ActiveMDIChild);
     SaveDialog.FileName := ExtractFileName(ActiveCad.Caption);
     ChangeFileExt(SaveDialog.FileName, '.cads');
@@ -401,7 +440,7 @@ begin
   FileSaveItem.Enabled := MDIChildCount > 0;
   FileSaveAsItem.Enabled := MDIChildCount > 0;
   SaveBtn.Enabled := MDIChildCount > 0;
-  CopyBtn.Enabled := MDIChildCount > 0;
+//  CopyBtn.Enabled := MDIChildCount > 0;
   FontBtn.Enabled := MDIChildCount > 0;
   PrintButton.Enabled := MDIChildCount > 0;
   WindowCascadeItem.Enabled := MDIChildCount > 0;
@@ -435,23 +474,40 @@ begin
 end;
 
 procedure TMainForm.AfficheHeure;
-
+  var i:integer;
 begin
-  If (ActiveMDIChild <> nil) and MainForm.itemOmbredustyle.Checked then
-  begin
-    TFormCadsol(ActiveMDIChild).Refresh;
-    // FormCadsol3D.Refresh;
+    for i:=1 to MDIChildCount do
+        with TformCadsol(MDIChildren[i-1]) do Refresh;
     if TFormCadsol(ActiveMDIChild).Zoom1.Checked then
       ZoomForm.Refresh;
-  end;
-
 end;
 
+(*
 procedure TMainForm.Timer1Timer(Sender: TObject);
 begin
   HeureCadran := HeureCadran + Timer1.Interval / 1000 / 3600 / 24;
   AfficheHeure;
 
+end;  *)
+
+Procedure TmainForm.FixerFonte;
+begin
+  //if ActiveMDIChild <> Nil then
+  begin
+    //ActiveCad := TFormCadsol(ActiveMDIChild);
+    UserPol := cadran.Pol;
+    HUserPol := CreateFontIndirect(UserPol);
+    FontDialog.Font.handle := HUserPol;
+    FontDialog.Font.Color := cadran.couleur;
+    FontDialog.Font.Name := TFontName(cadran.Pol.lfFaceName);
+    FontDialog.Font.size := FontDialog.Font.size div 10;
+    //FontDialog.Execute;
+    FontDialog.Font.size := FontDialog.Font.size * 10;
+    HUserPol := FontDialog.Font.handle;
+    GetObject(HUserPol, sizeOf(TlogFont), @cadran.Pol);
+    cadran.couleur := FontDialog.Font.Color;
+    UserPol :=cadran.Pol;
+  end;
 end;
 
 procedure TMainForm.FontBtnClick(Sender: TObject);
@@ -459,21 +515,31 @@ begin
   if ActiveMDIChild <> Nil then
   begin
     ActiveCad := TFormCadsol(ActiveMDIChild);
+    //
+    //ActiveCad.Cadran.pol.lfOrientation:=0;
+    //
+    //FixerFonte(ActiveCad.Cadran);
     UserPol := ActiveCad.cadran.Pol;
-    HUserPol := CreateFontIndirect(UserPol);
+    HUserPol := HFont(CreateFontIndirect(UserPol));
     FontDialog.Font.handle := HUserPol;
     FontDialog.Font.Color := ActiveCad.cadran.couleur;
     FontDialog.Font.Name := TFontName(ActiveCad.cadran.Pol.lfFaceName);
+   // FontDialog.Font.size :=ActiveCad.cadran.Pol.lfHeight;
     FontDialog.Font.size := FontDialog.Font.size div 10;
-    FontDialog.Execute;
-    FontDialog.Font.size := FontDialog.Font.size * 10;
-    HUserPol := FontDialog.Font.handle;
-    GetObject(HUserPol, sizeOf(TlogFont), @ActiveCad.cadran.Pol);
-    ActiveCad.cadran.couleur := FontDialog.Font.Color;
-    ActiveCad.cadran.Modif := True;
-    UserPol := ActiveCad.cadran.Pol;
-    ActiveCad.Refresh;
+    if FontDialog.Execute then begin
+        FontDialog.Font.size := FontDialog.Font.size * 10;
+        HUserPol := FontDialog.Font.handle;
+
+        GetObject(HUserPol, sizeOf(TlogFont), @ActiveCad.cadran.Pol);
+        ActiveCad.cadran.couleur := FontDialog.Font.Color;
+        ActiveCad.cadran.Modif := True;
+
+        UserPol := ActiveCad.cadran.Pol;
+
+        ActiveCad.Refresh;
+    end;
   end;
+
 end;
 
 procedure TMainForm.Configurerlimprimante1Click(Sender: TObject);
@@ -519,89 +585,117 @@ end;
 
 Procedure TMainForm.DimEtOrientationCadranCubique;
 var    l,h,p:integer;
-      icl,dcl:Real;
+      icl,dcl,rot:Real;
+
+   procedure modulo(var aCadran:Tcadran);
+   begin
+     with aCadran do begin
+     if Decli>180 then Decli:=Decli-360;
+     if Decli<-180 then Decli:=Decli+360;
+     if incli>180 then incli:=incli-360;
+     if incli<-180 then incli:=incli+360;
+     if Rotation>180 then Rotation:=Rotation-360;
+     if Rotation<-180 then Rotation:=Rotation+360
+     end;
+   end;
 begin
  //Dimensions et Inclinaisons
   With CadranMultiple do begin
      L:=Largeur;H:=Hauteur;P:=Profondeur;
-     icl:=Incli;dcl:=Decli;
+     icl:=Incli;dcl:=Decli;rot:=rotation;
   end;
   With FCadSud.Cadran do begin
      Largeur:=L;Hauteur:=H;Profondeur:=P;
-     Incli:=90;
+     Incli:=icl;
      Decli:=dcl;
+     rotation:=0;
      end;
+  Modulo(Fcadsud.Cadran);
   With FCadNord.Cadran do begin
      Largeur:=L;Hauteur:=H;Profondeur:=P;
-     Incli:=90;
-     Decli:=-dcl+180;
-     if Decli>180 then Decli:=Decli-360
+     Incli:=180-icl;
+     Decli:=180+dcl;
+     rotation:=0;
      end;
+  Modulo(FcadNord.Cadran);
   With FCadEst.Cadran do begin
      Largeur:=P;Hauteur:=H;Profondeur:=L;
-     Incli:=90;
+     Incli:=90-rot;
      Decli:=dcl+90;
-     if Decli>180 then Decli:=Decli-360
+     rotation:=icl-90;
      end;
+  Modulo(FcadEst.Cadran);
   With FCadOuest.Cadran do begin
      Largeur:=P;Hauteur:=H;Profondeur:=L;
-     Incli:=90;
+     Incli:=90+rot;
      Decli:=dcl-90;
-     if Decli<-180 then Decli:=Decli+360
+     rotation:=90-icl;
      end;
+  Modulo(FcadOuEst.Cadran);
+
   With FCadInf.Cadran do begin
      Largeur:=L;Hauteur:=P;Profondeur:=H;
-     Incli:=180;
+     Incli:=icl+90;
      Decli:=dcl;
+     rotation:=0;
      end;
+  Modulo(FcadInf.Cadran);
   With FCadSup.Cadran do begin
      Largeur:=L;Hauteur:=P;Profondeur:=H;
-     Incli:=0;
+     Incli:=icl-90;
      Decli:=dcl;
+     rotation:=0;
      end;
+  Modulo(FcadSup.Cadran);
 end;
 
 procedure TMainForm.ItemCubique1Click(Sender: TObject);
  var i:integer;
 
 begin
+  CadranMultiple.Typ:=Vide;
   for i := 0 to MDIChildCount - 1 do
     TformCadsol(MDIChildren[i]).Close;
   VisuCadMultipleForm.Hide;
   InitCadran(CadranMultiple);
   With CadranMultiple do begin
      Typ:=Cubique;
+     NomFichier:='Cadran cubique';
      Largeur:=6000;Hauteur:=4000;Profondeur:=7000;
      Incli:=90;Decli:=0;
   end;
 
   //Creation Faces
-  FCadSud := TFormCadsol.Create(application);
-  FCadSud.Caption:= ChTcad[TCadSud];
+  
   FCadEst := TFormCadsol.Create(application);
   FCadEst.Caption:= ChTcad[TCadEst];
+ // FCadEst.Cadran.Typ:=TCadEst;
   FCadNord := TFormCadsol.Create(application);
   FCadNord.Caption:= ChTcad[TCadNord];
+//  FCadNord.Cadran.Typ:=TCadNord;
   FCadOuest := TFormCadsol.Create(application);
   FCadOuest.Caption:= ChTcad[TCadOuest];
+ // FCadOuest.Cadran.Typ:=TCadOuest;
   FCadSup := TFormCadsol.Create(application);
   FCadSup.Caption:= ChTcad[TCadSup];
+ // FCadSup.Cadran.Typ:=TCadSup;
   FCadInf := TFormCadsol.Create(application);
   FCadInf.Caption:= ChTCad[TCadInf];
-
+//  FCadInf.Cadran.Typ:=TCadInf;
+  FCadSud := TFormCadsol.Create(application);
+  FCadSud.Caption:= ChTcad[TCadSud];
+//  FCadSud.Cadran.Typ:=TCadSud;
+  Cascade;
   DimEtOrientationCadranCubique;
   //Init Style
+  AfficheFenetres;
+
   for i := 0 to MDIChildCount - 1 do
     with TformCadsol(MDIChildren[i]).Cadran do begin
       Hstyle := Hauteur div 10;gx:=0;gy:=Hauteur div 5;
+      Refresh;
     end;
-
-  Tile;
-  AfficheFenetres;
-
-
-
-
+  
 end;
 
 
@@ -611,7 +705,7 @@ Var
   R, C: Trect;
   l, h: integer;
 begin
-
+  CadranMultiple.Typ:=Vide;
   for i := 0 to MDIChildCount - 1 do
     TformCadsol(MDIChildren[i]).Close;
   VisuCadMultipleForm.Hide;
@@ -619,6 +713,8 @@ begin
   CadranMultiple.Typ:=Multiple;
   if CadranMultipleForm.ShowModal = mrCancel then
     exit;
+  for i := 0 to MDIChildCount - 1 do
+    TformCadsol(MDIChildren[i]).Close;
   With CadranMultiple, CadranMultipleForm do
   begin
     Marge := SpinEditMarge.Value * 10;
@@ -654,6 +750,7 @@ begin
   VisuCadMultipleForm.Repaint;
 
   AfficheFenetres;
+  Cascade;
 
 end;
 
@@ -662,7 +759,7 @@ Var
   i: integer;
 
 begin
-
+  CadranMultiple.Typ:=vide;
   for i := 0 to MDIChildCount - 1 do
     MDIChildren[i].Close;
 
@@ -670,76 +767,8 @@ begin
   InitCadran(ActiveCad.cadran);
   ActiveCad.Caption := 'Cadran simple';
   VisuCadMultipleForm.Hide;
-  CadranMultiple.Typ:=vide;
-  //VoirCadranMultiple := False;
-
   AfficheFenetres;
-
-  // if Sender = Cadranmultiple1 then
-  // begin
-  // if CadranMultipleForm.ShowModal=mrCancel then Exit;
-  // VoirCadranMultiple := True;
-  // With CadranMultiple, CadranMultipleForm do
-  // begin
-  // Marge := SpinEditMarge.Value * 10;
-  // nbCadLargeur := nbCadLargeurEdit.Value;
-  // nbCadHauteur := nbCadHauteurEdit.Value;
-  // LargeurTot := LargeurTotEdit.Value * 10;
-  // HauteurTot := HauteurTotEdit.Value * 10;
-  // Largeur := LargeurTot div nbCadLargeur; // div nbCadlargeur;
-  // Hauteur := HauteurTot div nbCadHauteur; // div nbCadHauteur;
-  // Typ := Multiple;
-  // end;
-  // end
-  // else
-  // With CadranMultiple do
-  // begin
-  // nbCadLargeur := 1;
-  // nbCadHauteur := 1;
-  // LargeurTot := Largeur;
-  // HauteurTot := Hauteur;
-  // Typ := Vertical;
-  // end;
-  // for i := 1 to CadranMultiple.nbCadLargeur do
-  // for j := 1 to CadranMultiple.nbCadHauteur do
-  // begin
-  // ActiveCad := TFormCadsol.Create(application);
-  // InitCadran(ActiveCad.cadran);
-  // ActiveCad.Caption := 'Cadran L' + IntToStr(j) + ' - C' + IntToStr(i);
-  // ActiveCad.cadran.Largeur := CadranMultiple.Largeur;
-  // ActiveCad.cadran.Hauteur := CadranMultiple.Hauteur;
-  // ActiveCad.cadran.Marge := CadranMultiple.Marge;
-  // ActiveCad.cadran.Ligne := j;
-  // ActiveCad.cadran.Colonne := i;
-  // ActiveCad.cadran.hStyle := CadranMultiple.Hauteur * 10 div 100;
-  // ActiveCad.cadran.gx := 0;
-  // ActiveCad.cadran.gy := CadranMultiple.Hauteur * 10 div 50;
-  // end;
-  //
-  // if Sender = Cadranmultiple1 then
-  // begin
-  // Cascade;
-  // VisuCadMultipleForm.WindowState:=WSNormal;
-  // VisuCadMultipleForm.Show;
-  // VisuCadMultipleForm.Repaint;
-  // end
-  // else begin
-  // ActiveCad.Caption := 'nouveau Cadran';
-  // VisuCadMultipleForm.Hide;
-  // VoirCadranMultiple := False;
-  // end;
-  // ItemAfficher.Visible := True;
-  // if MainForm.ItemParametrage.Checked then
-  // Param.Show;
-  // if MainForm.itemPositionGeographique.Checked then
-  // PositionForm.Show;
-  // if MainForm.itemCouleursetEpaisseurs.Checked then
-  // CouleursDlg.Show;
-  // if MainForm.itemVueen3dimentions.Checked then
-  // FormCadsol3D.Show;
-  // if MainForm.itemOmbredustyle.Checked then
-  // HeureDlg.Show;
-
+  ActiveCad.WindowState:=wsMaximized;
 end;
 
 procedure TMainForm.CommentPanelDblClick(Sender: TObject);
@@ -799,8 +828,15 @@ end;
 procedure TMainForm.FormActivate(Sender: TObject);
 begin
   inherited;
-//If self.MDIChildCount=0 then self.FileNewItemClick(Sender);
-//AfficheFenetres;
+  If self.MDIChildCount=0 then NouveauCadransimpleClick(Sender);
+  AfficheFenetres;
+end;
+
+procedure TMainForm.FormClick(Sender: TObject);
+begin
+  inherited;
+ If self.MDIChildCount=0 then NouveauCadransimpleClick(Sender);
+ self.SetFocus;
 end;
 
 procedure TMainForm.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -819,6 +855,7 @@ begin
       Self.itemCouleursetEpaisseurs.Checked);
     Ini.WriteBool(Name, 'HeureduCadran_Checked', Self.itemOmbredustyle.Checked);
     Ini.WriteBool(Name, 'Vue3D_Checked', Self.itemVueen3dimentions.Checked);
+    Ini.WriteBool(Name, 'TypeCadran_Checked', Self.ItemTypedecadran1.Checked);
     Ini.WriteString(Name, 'Style', TStyleManager.ActiveStyle.Name);
   finally
     Ini.Free;
@@ -836,24 +873,24 @@ begin
   if application.messagebox(strPcopy(Buff, s), strPcopy(Buf, application.title),
     mb_yesno + mb_iconquestion) = IDYES then
   begin
-    Toutfermer1Click(Sender);
+    //FermerLesCadrans;;
     CanClose := True;
   end
   else
     CanClose := False;
 end;
 
-procedure TMainForm.Toutfermer1Click(Sender: TObject);
-var
-  i: integer;
-begin
-  for i := 0 to MDIChildCount - 1 do
-    TFormCadsol(MDIChildren[i]).Close;
-  if VisuCadMultipleForm <> nil then
-    VisuCadMultipleForm.Close;
-  // FileNewItemClick(Sender);
-  AfficheComment;
-end;
+//procedure TMainForm.Toutfermer1Click(Sender: TObject);
+//var
+//  i: integer;
+//begin
+//  for i := 0 to MDIChildCount - 1 do
+//    TFormCadsol(MDIChildren[i]).Close;
+//  if VisuCadMultipleForm <> nil then
+//    VisuCadMultipleForm.Close;
+//  // FileNewItemClick(Sender);
+//  AfficheComment;
+//end;
 
 procedure TMainForm.Index1Click(Sender: TObject);
 var
@@ -896,14 +933,6 @@ procedure TMainForm.OuvrirCadranSimpleClick(Sender: TObject);
 begin
   if ActiveMDIChild = nil then
     NouveauCadransimpleClick(Sender);
- // OpenDialog1.FileTypes.Clear;
-  // OpenDialog1.InitialDir := GetCurrentDir;
- (* with OpenDialog1.FileTypes.Add do
-
-  begin
-    DisplayName := 'cadran simple';
-    FileMask := '*.cads';
-  end;   *)
 
   if OpenDialog1.Execute then
   begin
@@ -928,9 +957,11 @@ Var
   ActiveCad: TFormCadsol;
 begin
 
-  ItemToutFermerClick(Sender) ;
   OpenDialog1.FileName:='';
-  OpenDialog1.Execute;
+  if  Not OpenDialog1.Execute then Exit;
+
+  CadranMultiple.Typ:=Vide;
+  FermerLesCadrans(sender);
 
   if ExtractFileExt(OpenDialog1.FileName) = '.cadm' then
   begin
@@ -956,8 +987,55 @@ begin
     Cascade;
     VisuCadMultipleForm.Caption := OpenDialog1.FileName;
     VisuCadMultipleForm.Show;
+//    VisuCadMultipleForm.SetFocus;
+//    VisuCadMultipleForm.FormActivate(sender);
+    VisuCadMultipleForm.Refresh;
+  end;
+
+
+  if ExtractFileExt(OpenDialog1.FileName) = '.cadc' then
+  begin
+    InitCadran(CadranMultiple);
+    CadranMultiple.typ:=cubique;
+    //VisuCadMultipleForm.WindowState := wsnormal;
+    FileMode := fmOpenRead;
+    assignFile(f_Cad, OpenDialog1.FileName);
+    Reset(f_Cad);
+    Read(f_Cad, CadranMultiple);
+    CadranMultiple.Modif:=False;
+    CadranMultiple.NomFichier:=ExtractFileName(OpenDialog1.FileName);
+       FCadInf := TFormCadsol.Create(application);
+       InitCadran(FCadInf.Cadran);
+       FCadInf.Caption:=chTcad[TCadInf];
+      Read(f_cad,FcadInf.Cadran);
+       FCadSup := TFormCadsol.Create(application);
+       FCadSup.Caption:=chTcad[TCadSup];
+       InitCadran(FCadSup.Cadran);
+      Read(f_cad,FcadSup.Cadran);
+       FCadNord := TFormCadsol.Create(application);
+       FCadNord.Caption:=chTcad[TCadNord];
+       InitCadran(FCadNord.Cadran);
+      Read(f_cad,FcadNord.Cadran);
+       FCadEst := TFormCadsol.Create(application);
+       FCadEst.Caption:=chTcad[TCadEst];
+       InitCadran(FCadEst.Cadran);
+      Read(f_cad,FcadEst.Cadran);
+       FCadOuest:= TFormCadsol.Create(application);
+       FCadOuest.Caption:=chTcad[TCadOuest];
+       InitCadran(FCadOuest.Cadran);
+      Read(f_cad,FcadOuest.Cadran);
+       FCadSud := TFormCadsol.Create(application);
+       FCadSud.Caption:=chTcad[TCadSud];
+       InitCadran(FCadSud.Cadran);
+      Read(f_cad,FcadSud.Cadran);
+    CloseFile(f_Cad);
+    Cascade;
+
+   // VisuCadMultipleForm.Caption := OpenDialog1.FileName;
+   // VisuCadMultipleForm.Show;
    // VisuCadMultipleForm.Repaint;
   end;
+
 
   if ExtractFileExt(OpenDialog1.FileName) = '.cads' then
   begin
@@ -973,6 +1051,7 @@ begin
   ItemAfficher.Visible := True;
   AfficheFenetres;
   AfficheComment;
+
 
 end;
 
@@ -999,9 +1078,10 @@ var
   Ini: TIniFile;
   Name: String;
 begin
+  //ItemToutfermerClick(sender);
   Name := 'Menu';
   Ini := TIniFile.Create(ChangeFileExt(application.ExeName, '.INI'));
-
+  try
   Ini.WriteBool(Name, 'Parametrage_Checked', Self.ItemParametrage.Checked);
   Ini.WriteBool(Name, 'POsitionGeo_Checked',
     Self.itemPositionGeographique.Checked);
@@ -1009,6 +1089,7 @@ begin
     Self.itemCouleursetEpaisseurs.Checked);
   Ini.WriteBool(Name, 'HeureduCadran_Checked', Self.itemOmbredustyle.Checked);
   Ini.WriteBool(Name, 'Vue3D_Checked', Self.itemVueen3dimentions.Checked);
+  Ini.WriteBool(Name, 'TypeCadran_Checked', Self.ItemTypedecadran1.Checked);
 
   FStyle.ShowModal;
 
@@ -1022,33 +1103,79 @@ begin
     Ini.ReadBool(Name, 'HeureduCadran_Checked', False);
   Self.itemVueen3dimentions.Checked :=
     Ini.ReadBool(Name, 'Vue3D_Checked', False);
-  Style := Ini.ReadString(Name, 'Style', 'Windows');
-
+  Self.ItemTypedecadran1.Checked :=
+    Ini.ReadBool(Name, 'TypeCadran_Checked', False);
+  Style := Ini.ReadString(Name, 'Style', 'Windows10');
+  finally
+    Ini.Free;
+  end;
 end;
 
-procedure TMainForm.ItemToutFermerClick(Sender: TObject);
-var
-  i: integer;
+procedure TMainForm.Fentresflottantes1Click(Sender: TObject);
+begin
+  inherited;
+uFenetres.GererFenetres(1);
+end;
+
+procedure TMainForm.Fentresjointivesfixes1Click(Sender: TObject);
+begin
+  inherited;
+   uFenetres.GererFenetres(2);
+end;
+
+Procedure TMainForm.FermerLesCadrans(Sender:Tobject);
+   var i: integer;
 begin
   ItemAfficher.Visible := False;
   for i := 0 to MainForm.MDIChildCount - 1 do
     TFormCadsol(MainForm.MDIChildren[i]).close;
-  
-  CouleursDlg.Close;
   if VisuCadMultipleForm <> nil then
     VisuCadMultipleForm.Hide;
+end;
+
+Procedure TmainForm.MajCadrans;
+var i: integer;
+begin
+  for i := 0 to MainForm.MDIChildCount - 1 do
+    TFormCadsol(MainForm.MDIChildren[i]).Refresh;
+  if VisuCadMultipleForm <> nil then
+    VisuCadMultipleForm.Refresh;
+  HeureDlg.Refresh;
+  CouleursDlg.Refresh;
+  ZoomForm.Refresh;
+  Param.Refresh;
+  FormCadsol3D.Refresh;
+  PositionForm.Refresh;
+  TypeCadDlg.Refresh;
+end;
+
+procedure TMainForm.ItemToutFermerClick(Sender: TObject);
+
+begin
+  CadranMultiple.TYp:=Vide;
+  FermerLesCadrans(sender);
   HeureDlg.Close;
+  CouleursDlg.Close;
   ZoomForm.Close;
   Param.Close;
   FormCadsol3D.Close;
   PositionForm.Close;
+  TypeCadDlg.Close;
+  NouveauCadransimpleClick(sender);
+end;
+
+procedure TMainForm.ItemTypedecadran1Click(Sender: TObject);
+begin
+  inherited;
+  if ItemTypedecadran1.Checked then
+       TypeCadDlg.show else TypeCadDlg.Close;
 end;
 
 procedure TMainForm.itemVueen3dimentionsClick(Sender: TObject);
 begin
   inherited;
-  if itemVueen3dimentions.Checked then
-    FormCadsol3D.show else FormCadsol3D.Close;
+  if itemVueen3dimentions.Checked  then
+      FormCadsol3D.show else FormCadsol3D.Close;
 end;
 
 procedure TMainForm.Lisezmoi1Click(Sender: TObject);
@@ -1075,7 +1202,7 @@ procedure TMainForm.Assistant1Click(Sender: TObject);
 var
   i: integer;
   s1, s2: PChar;
-label Debut, fin, typecad, Param, geo, comment, photo, couleur, pp,
+label Debut, fin, typecad, orient, Param, geo, comment, photo, couleur, pp,
   fichiercoord, police, imprime, ficherecap, sauver;
 
 begin
@@ -1085,9 +1212,7 @@ Debut:
   with application do
     if messagebox(s1, s2, mb_iconquestion + mb_yesno) = IDYES then
     begin
-      (* for i := MDIChildCount - 1 downto 0 do
-        MDIChildren[i].Close;
-        FileNewItemClick(Sender); *)
+     ItemToutFermerClick(Sender);
 
     typecad:
       AssistForm.texte.Caption :=
@@ -1096,7 +1221,7 @@ Debut:
         mrAbort:
           exit;
         mrOk:
-          TFormCadsol(ActiveMDIChild).Type1Click(Sender);
+          TypeCadDlg.ShowModal;
         100:
           goto geo;
         -100:
@@ -1106,19 +1231,28 @@ Debut:
     geo:
       AssistForm.texte.Caption :=
         'Il faut ensuite fixer la position géographique du cadran:'#13#10 +
-        ' Latitude et, de plus, si le cadran doit donner l''heure légale:'#13#10
-        + ' Longitude, et decalage horaire par rapport à l''heure du méridien de Greenwitch';
+        'la Latitude et, de plus, si le cadran doit donner l''heure légale,'#13#10
+        + 'la Longitude et le décalage horaire par rapport au Temps Universel';
       case AssistForm.ShowModal of
         mrAbort:
           exit;
-        mrOk:
-          begin
-            PositionForm.Close;
-            PositionForm.BorderStyle := bsDialog;
-            PositionForm.ShowModal; // (ActiveMDIChild).Latitude1Click(Sender);
-            PositionForm.BorderStyle := bssizeable;
-            PositionForm.Show;
-          end;
+        mrOk:PositionForm.ShowModal;
+        100:
+          goto Param;
+        -100:
+          goto typecad;
+      end;
+
+    orient:
+      AssistForm.texte.Caption :=
+        'Il faut ensuite fixer l''orientation spatialedu cadran:'#13#10 +
+        'déclinaison Est ou Ouest par rapport au méridien local,'#13#10 +
+        'inclinaison par rapport à la verticale,'#13#10+
+        'rotation par rapport à l''horizontale.  ';
+      case AssistForm.ShowModal of
+        mrAbort:
+          exit;
+        mrOk:FormCadsol3D.ShowModal;
         100:
           goto Param;
         -100:
@@ -1138,8 +1272,39 @@ Debut:
         mrAbort:
           exit;
         mrOk:
-          Parametre.Param.Show;
+          Parametre.Param.ShowModal;
         // TFormCadsol(ActiveMDIChild).Paramtrage1Click(Sender);
+      end;
+
+
+     couleur:
+      AssistForm.texte.Caption :=
+        'La couleur et l''épaisseur des traits (au 1/10 de mm)' +
+        ' peuvent être choisis par l''utilisateur.';
+      case AssistForm.ShowModal of
+        - 100:
+          goto photo;
+        100:
+          goto police;
+        mrAbort:
+          exit;
+        mrOk:
+          CouleursDlg.ShowModal;
+        // TFormCadsol(ActiveMDIChild).Couleurs1Click(Sender);
+      end;
+
+    police:
+      AssistForm.texte.Caption := 'Vous pouvez choisir la police' +
+        ' de caractères utilisée pour tracer le cadran.';
+      case AssistForm.ShowModal of
+        - 100:
+          goto couleur;
+        100:
+          goto pp;
+        mrAbort:
+          exit;
+        mrOk:
+          TFormCadsol(ActiveMDIChild).Police1Click(Sender);
       end;
 
     comment:
@@ -1172,35 +1337,7 @@ Debut:
           TFormCadsol(ActiveMDIChild).Photo1Click(Sender);
       end;
 
-    couleur:
-      AssistForm.texte.Caption :=
-        'La couleur et l''épaisseur des traits (au 1/10 de mm)' +
-        ' peuvent être choisis par l''utilisateur.';
-      case AssistForm.ShowModal of
-        - 100:
-          goto photo;
-        100:
-          goto police;
-        mrAbort:
-          exit;
-        mrOk:
-          CouleursDlg.Show;
-        // TFormCadsol(ActiveMDIChild).Couleurs1Click(Sender);
-      end;
 
-    police:
-      AssistForm.texte.Caption := 'Vous pouvez choisir la police' +
-        ' de caractères utilisée pour tracer le cadran.';
-      case AssistForm.ShowModal of
-        - 100:
-          goto couleur;
-        100:
-          goto pp;
-        mrAbort:
-          exit;
-        mrOk:
-          TFormCadsol(ActiveMDIChild).Police1Click(Sender);
-      end;
 
     pp:
       AssistForm.texte.Caption := 'Il est possible de choisir un papier peint '
@@ -1278,12 +1415,14 @@ Debut:
 
     fin:
       if messagebox
-        ('Nous espèrons que ce logiciel vous donne satisfaction'#13#10 +
-        'si vous avez des remarques diverses, n''hésitez pas '#13#10 +
-        'à nous en faire part.', 'Assistant de Création',
+        ('Nous venons de découvrir le processus de création d''un cadran simple'#13#10 +
+        'Vous pouvez aussi réaliser;  '#13#10 +
+        '- des cadrans multiples (plusieurs cadrans sur un même plan).'#13#10 +
+        '- des cadran cubiques (ou parallélepipèdiques) avec un cadran sur chaque face.', 'Assistant de Création',
         mb_iconinformation + mb_OKCancel) = idcancel then
         exit;
       HelpAboutItemClick(Sender);
+      uFenetres.GererFenetres(1);
     end;
 end;
 
@@ -1292,10 +1431,6 @@ begin
   WinExec('explorer.exe HTTP://Cadsol.fr',1);
 end;
 
-{ s:='explorer.exe http://www.cadsol.fr';
-  if Executer(s,SW_SHOWMAXIMIZED)<32 then
-  MessageDlg('Connection impossible' , mtWarning,[mbOk], 0);
-  end; }
 begin
   InitCadran(CadranMultiple);
 

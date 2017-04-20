@@ -58,8 +58,8 @@ type
     Ligne,Colonne:integer;
     contour:Boolean;
     Marge:Integer;
-    Real1,real2,real3,real4,real5,real6real7:real;
-    Int1,Int2,int3,int4,int5,int6,int7:integer;
+    Rotation,real2,real3,real4,real5,real6real7:real;
+    ChiffresRomains,Int2,int3,int4,int5,int6,int7:integer;
     String1,String2,String3,String4,String5,String6,String7:TnomFichier;
   end;
 
@@ -67,7 +67,7 @@ type
 Const
   chTcad: array [TCad] of string = (' ', 'Cadran à style fixe', 'Horizontal',
     'Oriental', 'Occidental', 'Cadran analemmatique', 'Cadran de hauteur',
-    'Cadran vertical bifilaire', 'Cadran multiple','Courbe de l''équation du temeps', 'Courbe de l''analemne',
+    'Cadran vertical bifilaire', 'Cadran multiple','Courbe de l''équation du temps', 'Courbe de l''analemne',
     'Cubique','Face Sud','Face Est','Face Nord','Face Ouest','Face supérieure','Face inférieure');
 
 var
@@ -177,9 +177,11 @@ begin
     end;
     precishbi := 1;
     FillChar(pol, sizeof(TlogFont), #0);
-    Pol.lfFaceName:='Arial narrow' ;
+    Pol.lfFaceName:='Arial' ;
+    Pol.lfOrientation:=0;
     Pol.lfWeight:=400;
     Pol.lfHeight:=-133;
+    Pol.lfOrientation:=0;
     couleur := RGB(0, 0, 0);
     axes := false;
     coord := false;
@@ -239,6 +241,8 @@ begin
     Ligne:=1;Colonne:=1;
     Contour:=False;
     Marge:=300;
+    Rotation:=0;
+    ChiffresRomains:=0;
   end;
 end;
 
@@ -398,7 +402,16 @@ begin
   if IoResult = 0 then
   begin
     write(f_Cad, CadranMultiple);
-    for i := 1 to MainForm.MDIChildCount do write(f_cad,TFormCadsol(MainForm.MDIChildren[i-1]).Cadran);
+    if CadranMultiple.Typ=Multiple then
+      for i := 1 to MainForm.MDIChildCount do write(f_cad,TFormCadsol(MainForm.MDIChildren[i-1]).Cadran);
+    if CadranMultiple.Typ=Cubique then begin
+      write(f_cad,FcadInf.Cadran);
+      write(f_cad,FcadSup.Cadran);
+      write(f_cad,FcadNord.Cadran);
+      write(f_cad,FcadEst.Cadran);
+      write(f_cad,FcadOuest.Cadran);
+      write(f_cad,FcadSud.Cadran);
+    end;
     closeFile(f_Cad);
   end;
 {$I+}

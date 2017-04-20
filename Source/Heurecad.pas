@@ -41,14 +41,16 @@ begin
   OmbreStyle := True;
   DatePicker.Date := Int(HeureCadran);
   TimePicker.time := Frac(HeureCadran);
-   Mainform.AfficheHeure;
+  Mainform.itemOmbredustyle.Checked:=True;
+  Mainform.AfficheHeure;
 end;
 
 procedure THeureDlg.FormClose(Sender: TObject; var Action: TCloseAction);
-var achild:TFormCadsol;
+var achild:TFormCadsol; i:integer;
 begin
  OmbreStyle:=False;
  MainForm.itemOmbredustyle.Checked:=False;
+ For i:=1 to MainForm.MDIChildCount do MainForm.MDIChildren[i-1].Refresh;
 end;
 
 procedure THeureDlg.HDButtonClick(Sender: TObject);

@@ -33,7 +33,6 @@ object FormAPropos: TFormAPropos
     ParentBackground = False
     ParentFont = False
     TabOrder = 0
-    ExplicitHeight = 669
     object Bevel1: TBevel
       Left = 15
       Top = 8

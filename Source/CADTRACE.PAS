@@ -29,6 +29,7 @@ var
   crayon_hsol, crayon_ax, crayon_hbab, crayon_hit, crayon_axe, crayon_dhe,
     crayon_arcd, crayon_meri, old_crayon, new_crayon, crayon_contour: typeTrait;
   GLLineAJL: TGLLines;
+  Theta:real;
 
 procedure CreerCrayon;
 begin
@@ -137,9 +138,10 @@ var
 
   function Ombre(decl, t: real): integer;
   var
-    x0, y0, z0, x1, y1, z1, x2, y2, z2, x3, y3, z3, R: real;
+    x0, y0, z0, x1, y1, z1, x2, y2, z2, x3, y3, z3,x4,y4, R: real;
 
   begin
+
     case cadran.typ of
       vertical:
         begin
@@ -184,8 +186,9 @@ var
               Ombre := 3;
               exit
             end;
-            x := -system.round(x3); (* translation x3, y3, z3, into x, y *)
-            y := system.round(y3);
+            x4:= x3*cos(Theta)-y3*sin(Theta);y4:=x3*sin(Theta)+y3*cos(Theta);
+            x := -system.round(x4); (* translation x3, y3, z3, into x, y *)
+            y := system.round(y4);
             (* these are the wanted coordinates of the shadow point *)
             x := x + gx;
             y := y + gy;
@@ -227,8 +230,9 @@ var
             Ombre := 3;
             exit
           end;
-          x := system.round(x3);
-          y := -system.round(y3);
+          x4:= x3*cos(Theta)-y3*sin(Theta);y4:=x3*sin(Theta)+y3*cos(Theta);
+          x := system.round(x4);
+          y := -system.round(y4);
           x := x + gx;
           y := y + gy;
           (* if (x > -largeur div 2) and (x < largeur div 2) and
@@ -244,7 +248,7 @@ var
 
   function fSousStyle: integer;
   var
-    x0, y0, z0, x1, y1, z1, x2, y2, z2, x3, y3, z3, v: real;
+    x0, y0, z0, x1, y1, z1, x2, y2, z2, x3, y3, z3,x4,y4, v: real;
     x, y: integer;
 
   begin
@@ -267,9 +271,11 @@ var
     end;
     with cadran do
     begin
-      x := -round(x3 * hstyle / z3); (* translation x3, y3, z3, into x, y *)
-      y := round(y3 * hstyle / z3);
+      x4:= x3*cos(Theta)-y3*sin(Theta);y4:=x3*sin(Theta)+y3*cos(Theta);
+      x := -round(x4 * hstyle / z3); (* translation x3, y3, z3, into x, y *)
+      y := round(y4 * hstyle / z3);
       (* these are the wanted coordinates of the shadow point *)
+
       x := x + gx;
       px := x;
       y := y + gy;
@@ -280,7 +286,7 @@ var
 
   procedure EcrireA(x, y: integer; s: string);
   var
-    Spacetext: TGLSpaceText;
+    Spacetext: TGLSpaceText;v:integer;code:integer;
   begin
     if not FichierCoord then
     begin
@@ -305,6 +311,35 @@ var
       end;
       x := x + ox;
       y := y + oy;
+      val(s,V,code);
+      if (code=0) and (Cadran.ChiffresRomains=1) then Begin
+        case V of
+          1:s:='I';
+          2:s:='II';
+          3:s:='III';
+          4:s:='IV';
+          5:s:='V';
+          6:s:='VI';
+          7:s:='VII';
+          8:s:='VIII';
+          9:s:='IX';
+          10:s:='X';
+          11:s:='XI';
+          12:s:='XII';
+          13:s:='XIII';
+          14:s:='XIV';
+          15:s:='XV';
+          16:s:='XVI';
+          17:s:='XVII';
+          18:s:='XVIII';
+          19:s:='XIX';
+          20:s:='XX';
+          21:s:='XXI';
+          22:s:='XXII';
+          23:s:='XXIII';
+          24:s:='XXIV';
+        end;
+      End;
       Canvas.Textout(x, y, s);
       setTextAlign(dc, 0);
       Canvas.MoveTo(x, y);
@@ -407,10 +442,13 @@ var
       end
       else
       begin
-        xr := xp / Largeur * FormCadsol3D.GLCube1.CubeWidth;
+       (* xr := xp / Largeur * FormCadsol3D.GLCube1.CubeWidth;
         yr := yp / Hauteur * FormCadsol3D.GLCube1.CubeHeight;
         zr := FormCadsol3D.GLCube1.CubeDepth / 2 + ZP / Profondeur *
-          FormCadsol3D.GLCube1.CubeDepth;
+          FormCadsol3D.GLCube1.CubeDepth;    *)
+        xr := xp / GRDim;
+        yr := yp / GRDim;
+        zr := (Profondeur / 2 + ZP) / GRDim;
         GLLineAJL.AddNode(xr,yr, zr);
       end;;
     end;
@@ -605,26 +643,32 @@ var
 var
   Present: TDateTime;
   Year, Month, Day, Hour, Min, Sec, MSec: word;
-
+ //
+ // DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD
+ //
 begin (* TraceCadran *)
+
   // 3D
   ZP := 10; (* elevation 3D standart *)
   //
+
   CreerCrayon;
   EcrireLigne('');
   EcrireLigne('');
   dc := Canvas.Handle;
+  Cadran.pol.lfOrientation:=round(Cadran.Rotation*10);
   HUserPol := CreateFontIndirect(cadran.Pol);
-  // GetObject(HUserPol, sizeOf(TlogFont), @cadran.Pol);
+  MainForm.FixerFonte(Cadran);
+
   if HUserPol <> 0 then
     with cadran do
     begin
       hOldFont := selectObject(dc, HUserPol);
       setBkMode(dc, TRANSPARENT);
       OldCur := SetCursor(LoadCursor(0, IDC_WAIT));
-
+     {
       ha := Canvas.TextHeight('N'); (* Hiword(GetTextExtent(dc,'N',1)); *)
-      la := Canvas.TextWidth('W'); (* Loword(GetTextExtent(dc,'W',1)); *)
+      la := Canvas.TextWidth('W'); (* Loword(GetTextExtent(dc,'W',1)); *)   }
       hsize := GetDeviceCaps(dc, HORZSIZE) * 10;
       vsize := GetDeviceCaps(dc, VERTSIZE) * 10;
 
@@ -645,6 +689,8 @@ begin (* TraceCadran *)
       d := DegToRad(Decli);
       cosd := cos(d);
       sind := sin(d);
+      Theta:=DegtoRad(Rotation);
+
       hl := round((ArcCos(-tan(Phi) * tan(DegToRad(DeltaDeg[-1]))) - pi)
         / pi * 12);
 
@@ -1759,18 +1805,16 @@ begin (* TraceCadran *)
       selectObject(dc, hOldFont);
       SelectCrayon(old_crayon);
 
-    end { with }
-  else
-  begin
-    MessageBox(0,
-      'Désactiver l''affichage du contenu des fenêtres'#13'pendant le déplacement',
-      'CADSOL: Modifier les propriétés de l''affichage', MB_ICONSTOP);
-    halt;
-  end;
+    end
+    else
+    begin
+       MessageBox(0,
+      'Police absente','HuserPol', MB_ICONSTOP);
+      halt;
+    end;
 end;
 
 begin
   nbp := 0;
   lg := '';
-
 end.

@@ -32,15 +32,6 @@ type
     IncLbl2: TLabel;
     Label8: TLabel;
     Label9: TLabel;
-    Orientation: TTabSheet;
-    Bevel4: TBevel;
-    Declinaison: TLabel;
-    DecliEdit: TSpinEdit;
-    DecliOuestRB: TRadioButton;
-    Label11: TLabel;
-    IncliEdit: TSpinEdit;
-    Label12: TLabel;
-    Label14: TLabel;
     Label15: TLabel;
     gEdit: TSpinEdit;
     GroupBox2: TGroupBox;
@@ -51,15 +42,6 @@ type
     Label19: TLabel;
     gyEdit: TSpinEdit;
     Label20: TLabel;
-    Label21: TLabel;
-    Label22: TLabel;
-    Label23: TLabel;
-    PleinSudBtn: TButton;
-    PleinNordBtn: TButton;
-    Horizontal0Btn: TButton;
-    VerticalBtn: TButton;
-    Horizontal180Btn: TButton;
-    Declinant90Btn: TButton;
     PoleLb: TLabel;
     StyleLb: TLabel;
     AutoBtn: TButton;
@@ -70,7 +52,6 @@ type
     DiametreEdit: TSpinEdit;
     LongStyleLb: TLabel;
     Bevel3: TBevel;
-    Bevel5: TBevel;
     ZodiaqueCB: TCheckBox;
     TabSheet1: TTabSheet;
     Bevel8: TBevel;
@@ -82,13 +63,6 @@ type
     DevyEdit: TSpinEdit;
     Label4: TLabel;
     Label6: TLabel;
-    DecliMinEdit: TSpinEdit;
-    IncliMinEdit: TSpinEdit;
-    Label7: TLabel;
-    Label13: TLabel;
-    Label10: TLabel;
-    PaintBoxDecli: TPaintBox;
-    PaintBoxIncli: TPaintBox;
     AppliquerBtn: TBitBtn;
     SousStyleLb: TLabel;
     Image1: TImage;
@@ -128,8 +102,6 @@ type
     Label43: TLabel;
     LabelLimiteDiametre: TLabel;
     ChBoxMargePourTous: TCheckBox;
-    DecliEstRB: TRadioButton;
-    RadioGroup1: TRadioGroup;
     GroupBox1: TGroupBox;
     IntervalleLbl1: TLabel;
     IntervalleLbl2: TLabel;
@@ -149,18 +121,20 @@ type
     RHsinEdit: TSpinEdit;
     GMTEdit: TSpinEdit;
     GMTMinEdit: TSpinEdit;
+    BitBtnCube: TBitBtn;
+    CheckBoxChiffresRomains: TCheckBox;
     procedure OKButtonClick(Sender: TObject);
     procedure AjouterBtnClick(Sender: TObject);
     procedure SupprimerBtnClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormActivate(Sender: TObject);
     procedure BtnAnnulClick(Sender: TObject);
-    procedure PleinSudBtnClick(Sender: TObject);
-    procedure PleinNordBtnClick(Sender: TObject);
-    procedure Horizontal0BtnClick(Sender: TObject);
-    procedure VerticalBtnClick(Sender: TObject);
-    procedure Horizontal180BtnClick(Sender: TObject);
-    procedure Declinant90BtnClick(Sender: TObject);
+//    procedure PleinSudBtnClick(Sender: TObject);
+//    procedure PleinNordBtnClick(Sender: TObject);
+//    procedure Horizontal0BtnClick(Sender: TObject);
+//    procedure VerticalBtnClick(Sender: TObject);
+//    procedure Horizontal180BtnClick(Sender: TObject);
+//    procedure Declinant90BtnClick(Sender: TObject);
     procedure AutoBtnClick(Sender: TObject);
     procedure CarreBtnClick(Sender: TObject);
     procedure PremierCBClick(Sender: TObject);
@@ -170,12 +144,15 @@ type
     procedure IntervalleEditExit(Sender: TObject);
     procedure HeureSolCBClick(Sender: TObject);
     procedure ZodiaqueCBClick(Sender: TObject);
-    procedure DecliEditChange(Sender: TObject);
-    procedure IncliEditChange(Sender: TObject);
-    procedure PageControlChange(Sender: TObject);
+//    procedure DecliEditChange(Sender: TObject);
+//    procedure IncliEditChange(Sender: TObject);
+//    procedure PageControlChange(Sender: TObject);
     procedure AppliquerBtnClick(Sender: TObject);
     procedure AutoFilsButtonClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure OrientationEnter(Sender: TObject);
+    procedure BitBtnCubeClick(Sender: TObject);
+    procedure FormShow(Sender: TObject);
   private
     procedure ListeArc(n, j, m: integer);
   end;
@@ -234,20 +211,37 @@ begin
   PageControl.ActivePage := Lignes;
 end;
 
+procedure TParam.FormShow(Sender: TObject);
+begin
+  inherited;
+   If MainForm.MDIChildCount=0 then close;
+end;
+
 procedure TParam.FormActivate(Sender: TObject);
 var
   i: integer;
   s: string[2];
   l, a: real;
 begin
+
   Mainform.ItemParametrage.Checked:=True;
+ // LbAideCubique.Visible:=False;
   AChild := TFormCadsol(Mainform.ActiveMDIChild);
+  if PageControl.ActivePage.Name='Orientation' then
+    if CadranMultiple.Typ=Cubique then begin
+        Achild:=FCadsud;
+        //LbAideCubique.Visible:=True;
+        Refresh;
+    end;
+
   ACadran := AChild.cadran;
-  Self.Caption := 'Paramètrage du ' + AChild.Caption;
+  Self.Caption := 'Paramètrage de: ' + AChild.Caption;
+
   With AChild.cadran do
   begin
-    Lignes.TabVisible := Typ <> vide;
-    Orientation.TabVisible := (Typ = vertical) or (Typ = Bifilaire);
+
+    Lignes.TabVisible := Not (Typ in[ vide,courbeEqT,courbeAna]);
+    //Orientation.TabVisible := (Typ = vertical) or (Typ = Bifilaire);
     Style.TabVisible := (Typ = vertical);
     Fils.TabVisible := (Typ = Bifilaire);
     ArcsDIurnes.TabVisible := (Typ = vertical) or (Typ = analemmatique) or
@@ -281,15 +275,7 @@ begin
     IntervalleEdit.Visible := (Typ = vertical) or (Typ = Bifilaire);
     AngleSaLbl.Visible := (Typ = vertical);
     AnglessLbl.Visible := (Typ = vertical);
-    Label11.Visible := (Typ = vertical);
-    Label12.Visible := (Typ = vertical);
-    Label13.Visible := (Typ = vertical);
-    Horizontal0Btn.Visible := (Typ = vertical);
-    VerticalBtn.Visible := (Typ = vertical);
-    Horizontal180Btn.Visible := (Typ = vertical);
-    PaintBoxIncli.Visible := (Typ = vertical)and(CadranMultiple.Typ<>Cubique);
-    IncliEdit.Visible := (Typ = vertical)and(CadranMultiple.Typ<>Cubique);
-    IncliMinEdit.Visible := (Typ = vertical)and(CadranMultiple.Typ<>Cubique);
+
     HSinCB.Visible := (Typ = vertical);
     RHsinEdit.Visible := (Typ = vertical);
     //HsinRLb.Visible := (Typ = vertical);
@@ -344,14 +330,14 @@ begin
     // IntervalleLbl1.enabled:=IntervalleEdit.Enabled;
     // IntervalleLbl2.enabled:=IntervalleEdit.Enabled;
 
-    DecliEdit.Value := round(Int(abs(decli)));
-    DecliMinEdit.Value := round(frac(abs(decli)) * 60);
-    if decli >= 0 then
-      DecliEstRB.Checked := true
-    else
-      DecliOuestRB.Checked := true;
-    IncliEdit.Value := round(Int(Incli));
-    IncliMinEdit.Value := round(frac(Incli) * 60);
+    //DecliEdit.Value := round(Int(abs(decli)));
+//    DecliMinEdit.Value := round(frac(abs(decli)) * 60);
+//    if decli >= 0 then
+//      DecliEstRB.Checked := true
+//    else
+//      DecliOuestRB.Checked := true;
+//    IncliEdit.Value := round(Int(Incli));
+//    IncliMinEdit.Value := round(frac(Incli) * 60);
 
     for i := 1 to NbDates do
       ArcList.Items.Strings[i - 1] := TexteArc(i, DateArc[i].jour,
@@ -411,8 +397,11 @@ begin
     RHsinEdit.Value := Distance div 10;
     GMTEdit.Value := Decalage;
     GMTMinEdit.Value := DecalMin;
+
+    CheckBoxChiffresRomains.Checked:=Boolean(ChiffresRomains)
+
   end;
-  PageControlChange(Sender);
+ // PageControlChange(Sender);
 end;
 
 procedure TParam.OKButtonClick(Sender: TObject);
@@ -456,22 +445,6 @@ begin
     heure_temp := HAntiqCB.Checked;
     Precision := PrecisionEdit.Value;
     Increment := IncrementEdit.Value;
-    decli := DecliEdit.Value + DecliMinEdit.Value / 60;
-    Incli := IncliEdit.Value + IncliMinEdit.Value / 60;
-    if Decli>180 then Decli:=180;
-    if Incli>180 then Incli:=180;
-    if DecliOuestRB.Checked then decli := -decli;
-    if CadranMultiple.Typ=Multiple then for i := 1 to Mainform.MDIChildCount do
-      begin
-        ActiveCad := TFormCadsol(Mainform.MDIChildren[i - 1]);
-        ActiveCad.cadran.decli := decli;
-        ActiveCad.cadran.Incli := Incli;
-      end;
-    if CadranMultiple.typ=Cubique then  begin
-        CadranMultiple.Decli:= decli;
-        MainForm.DimEtOrientationCadranCubique;
-        end;
-
 
     with IntervalleEdit do
     begin
@@ -505,8 +478,20 @@ begin
     DecalMin := GMTMinEdit.Value;
     AFFicheDate := CBAfficheDate.Checked;
 
+    if CheckBoxChiffresRomains.Checked
+    then ChiffresRomains:=1
+    else ChiffresRomains:=0;
+
   end;
 
+end;
+
+procedure TParam.OrientationEnter(Sender: TObject);
+begin
+  inherited;
+  Self.Caption := 'Paramètrage de: ' + FCadSud.Caption;
+  Refresh;
+Refresh
 end;
 
 procedure TParam.AutoBtnClick(Sender: TObject);
@@ -517,6 +502,16 @@ begin
     gxEdit.Value := 0;
     gyEdit.Value := Hauteur div 50;
   end;
+end;
+
+procedure TParam.BitBtnCubeClick(Sender: TObject);
+begin
+  inherited;
+   with AChild.Cadran do begin
+      LargeurEdit.Value:=(LargeurEdit.Value+HauteurEdit.Value+ProfEdit.Value) div 3;
+      HauteurEdit.Value:=LargeurEdit.Value;
+      ProfEdit.Value:=LargeurEdit.Value;
+    end;;
 end;
 
 procedure TParam.BtnAnnulClick(Sender: TObject);
@@ -612,7 +607,7 @@ begin
   end;
 
 end;
-
+(*
 procedure TParam.PleinSudBtnClick(Sender: TObject);
 begin
   DecliEdit.Value := 0;
@@ -647,7 +642,7 @@ procedure TParam.Horizontal180BtnClick(Sender: TObject);
 begin
   IncliEdit.Value := 180;
   IncliMinEdit.Value := 0;
-end;
+end; *)
 
 procedure TParam.CarreBtnClick(Sender: TObject);
 begin
@@ -685,7 +680,7 @@ procedure TParam.HeureSolCBClick(Sender: TObject);
 begin
   DemiHeureCB.enabled := HeureSolCB.Checked;
 end;
-
+(*
 procedure TParam.DecliEditChange(Sender: TObject);
 var
   r, a: real;
@@ -710,6 +705,9 @@ begin
     Pen.Color := ClRed;
     moveto(round(r), round(r));
     lineto(round(r - r * cos(a) / 4), round(r - r * sin(a) / 4));
+    //OKBUttonClick (sender);
+    //Achild.Refresh;
+   // FormCadsol3D.Refresh;
   end;
 end;
 
@@ -749,13 +747,17 @@ begin
   DecliEditChange(Sender);
   IncliEditChange(Sender);
 end;
-
+      *)
 procedure TParam.AppliquerBtnClick(Sender: TObject);
+ var i:integer;
 begin
   AChild := TFormCadsol(Mainform.ActiveMDIChild);
   OKButtonClick(Sender);
 
   AChild.refresh;
+  if PageControl.ActivePage.Name='Orientation' then
+    if CadranMultiple.Typ=Cubique then
+      for i:=1 to MainForm.MDIChildCount do MainForm.MDIChildren[i-1].Refresh;
   if formCadsol3d.Visible then
   begin
     formCadsol3d.Setfocus;

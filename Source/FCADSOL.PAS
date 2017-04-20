@@ -47,6 +47,8 @@ type
     ItemParam: TMenuItem;
     ItemCourleurs: TMenuItem;
     FileOpenDialog1: TFileOpenDialog;
+    ItemOrientation: TMenuItem;
+    OpenPictureDialog2: TOpenPictureDialog;
     procedure FormCreate(Sender: TObject);
     procedure Commemtaires1Click(Sender: TObject);
     procedure FormPaint(Sender: TObject);
@@ -81,6 +83,8 @@ type
     procedure ItemCourleursClick(Sender: TObject);
     procedure ItemEdition1DrawItem(Sender: TObject; ACanvas: TCanvas;
       ARect: TRect; Selected: Boolean);
+    procedure ItemOrientationClick(Sender: TObject);
+    procedure FormClick(Sender: TObject);
     // procedure ItemAfficherPhotoClick(Sender: TObject);
 
   private
@@ -209,14 +213,20 @@ begin
   Mainform.AfficheComment;
   Effacement1.Enabled := Cadran.NFBitmap <> '';
   UserPol := Cadran.Pol;
-  HUserPol := CreateFontIndirect(UserPol);
+  HUserPol := CreateFontIndirect(Cadran.Pol);
 
-  If MainForm.itemVueen3dimentions.Checked then FormCadsol3D.Refresh;
- //  FormCadsol3D.Repaint;
-  (* Param.Refresh;
-    CouleursDlg.Refresh;
-    PositionForm.Refresh;
-     *)
+(*  if MainForm.ItemParametrage.Checked then  with Param do begin
+    SetFocus; Repaint end;
+  if MainForm.itemPositionGeographique.Checked then
+    PositionForm.Invalidate;
+  if MainForm.itemCouleursetEpaisseurs.Checked then
+    CouleursDlg.Invalidate;
+  if MainForm.itemVueen3dimentions.Checked then
+    FormCadsol3D.Invalidate;
+  if MainForm.itemOmbredustyle.Checked then
+    HeureDlg.Invalidate;
+  if MainForm.ItemTypedecadran1.Checked then
+    TypeCadDlg.Invalidate;      *)
 
 end;
 
@@ -226,79 +236,16 @@ begin
 end;
 
 procedure TFormCadSol.Type1Click(Sender: TObject);
-var
-  aTyp: Tcad;
-  i, j: Integer;
-  ActiveCad: TFormCadSol;
+
 begin
- // ActiveCad:= TFormCadsol(self.ActiveMDIChild);
-  with Cadran do
-  begin
-    aTyp := Typ;
-    case Typ of
-      Vertical:
-        TypeCadDlg.VertBtn.Checked := true;
-      Analemmatique:
-        TypeCadDlg.AnalemBtn.Checked := true;
-      bifilaire:
-        TypeCadDlg.BifilBtn.Checked := true;
-      Montresol:
-        TypeCadDlg.HauteurBtn.Checked := true;
-      Vide:
-        TypeCadDlg.SansTypeBtn.Checked := true;
-      courbeEqT: TypeCadDlg. EqTempsBtn.Checked := true;
-      courbeAna: TypeCadDlg.AnalemneBtn.Checked := true;
-    end;
-
-    TypeCadDlg.ShowModal;
-
-    if TypeCadDlg.ModalResult = MrOK then
-    begin
-      if TypeCadDlg.VertBtn.Checked then Typ := Vertical;
-      if TypeCadDlg.BifilBtn.Checked then Typ := bifilaire;
-      if TypeCadDlg.AnalemBtn.Checked then Typ := Analemmatique;
-      if TypeCadDlg.HauteurBtn.Checked then Typ := Montresol;
-      if TypeCadDlg.SansTypeBtn.Checked then Typ := Vide;
-      if TypeCadDlg.EqTempsBtn.Checked then Typ := CourbeEqT;
-      if TypeCadDlg.AnalemneBtn.Checked then Typ := CourbeAna;
-
-
-      if Typ = Vertical then
-        SousStylaire1.Visible := true
-      else
-        SousStylaire1.Visible := false;
-
-      if aTyp <> Typ then
-      begin
-        case typ of
-        Analemmatique: begin
-                       Incli := 0;
-                       Decli := 0;
-                       end;
-        bifilaire:
-                       begin
-                       Incli := 90;
-                       for i:=1 to Mainform.MDIChildCount do begin
-                         ActiveCad:=TFormCadsol(MainForm.MDIChildren[i-1]);
-                         ActiveCad.Cadran.Incli:=90;
-                         end;
-                       end;
-        else begin
-             Devise:='';
-             end;  (*Case*)
-        Modif := true;
-        self.refresh;
-      end;
-    end;
-  end;  (*OK*)
-  end;  (* with *)
+  TypeCadDlg.Show;
 end;
 
 
 procedure TFormCadSol.Papierpeint1Click(Sender: TObject);
 begin
-  OpenPictureDialog1.Filename := Cadran.NFBitmap;
-  OpenPictureDialog1.Title := 'Papier peint';
+  OpenPictureDialog2.Filename := Cadran.NFBitmap;
+  OpenPictureDialog2.Title := 'Papier peint';
   if OpenPictureDialog1.Execute then
   begin
     Cadran.NFBitmap := OpenPictureDialog1.Filename;
@@ -446,39 +393,52 @@ procedure TFormCadSol.Zoom1Click(Sender: TObject);
 var
   i: Integer;
 begin
+for i:=1 to mainForm.MDIChildCount do
+    with TformCadsol(MainForm.MDIChildren[i-1]) do
+ begin
   Zoom1.Checked := not Zoom1.Checked;
   if Zoom1.Checked then
-  begin
+    begin
     Devise1.Checked := false;
     Style1.Checked := false;
     Cursor := crDrag;
     ZoomForm.Show;
     ZoomForm.refresh
-  end
+    end
   else
-  begin
+    begin
     Cursor := crDefault;
     ZoomForm.Close;
-  end;
+    end;
+ end;
 end;
 
 procedure TFormCadSol.Style1Click(Sender: TObject);
+var i:integer;
 begin
-  Style1.Checked := not Style1.Checked;
+  for i:=1 to mainForm.MDIChildCount do
+    with TformCadsol(MainForm.MDIChildren[i-1]) do
+  begin
+       Style1.Checked := not Style1.Checked;
   if ZoomForm.Visible then
     ZoomForm.Close;
   if Style1.Checked then
-  begin
+    begin
     Zoom1.Checked := false;
     Devise1.Checked := false;
     Cursor := crCross
-  end
+    end
   else
     Cursor := crDefault;
+  end;
 end;
 
 procedure TFormCadSol.Devise1Click(Sender: TObject);
+var i:integer;
 begin
+for i:=1 to mainForm.MDIChildCount do
+    with TformCadsol(MainForm.MDIChildren[i-1]) do
+ begin
   Devise1.Checked := not Devise1.Checked;
   if ZoomForm.Visible then
     ZoomForm.Close;
@@ -490,6 +450,7 @@ begin
   end
   else
     Cursor := crDefault;
+ end;
 end;
 
 procedure TFormCadSol.FormMouseMove(Sender: TObject; Shift: TShiftState;
@@ -572,18 +533,46 @@ begin
   end;
 end;
 
+procedure TFormCadSol.FormClick(Sender: TObject);
+begin
+//   FormCadsol3D.Refresh;
+//   SetActiveWindow(Handle)
+//   if FormCadsol3D.Visible then SetActiveWindow(FormCadsol3D.Handle);
+end;
+
 procedure TFormCadSol.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
-  Action := caFree;
+ (* if Mainform.MDIChildCount=1 then begin
+  HeureDlg.Close;
+  CouleursDlg.Close;
+  ZoomForm.Close;
+  Param.Close;
+  FormCadsol3D.Close;
+  PositionForm.Close;
+  TypeCadDlg.Close;
+  MainForm.ItemAfficher.Visible := False;
+  end;  *)
+ If CadranMultiple.Typ=Vide then begin
+    HeureDlg.Close;
+    CouleursDlg.Close;
+    ZoomForm.Close;
+    Param.Close;
+    FormCadsol3D.Close;
+    PositionForm.Close;
+    TypeCadDlg.Close;
+    VisuCadMultipleForm.Close;
+    MainForm.ItemAfficher.Visible := False;
+    Action := caFree
+    end else Action:=caMinimize;
 end;
 
 procedure TFormCadSol.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 var
   S1, S2: String;
 begin
-  if Cadran.Modif then
+  (* if Cadran.Modif then
   begin
-    if VisuCadMultipleForm.Visible then begin
+    if CadranMultiple.Typ<>Vide then begin
        //CadranMultiple.Modif:=True;
        Canclose:=True;
        exit;
@@ -600,8 +589,8 @@ begin
     Mainform.LongiPanel.Caption := '';
     Cadran.Modif := false;
     // Zoomform.Close;
-  end;
-  CanClose := true;
+  end;   *)
+  Canclose:= true;
 end;
 
 procedure TFormCadSol.FormResize(Sender: TObject);
@@ -623,6 +612,11 @@ end;
 procedure TFormCadSol.ItemEmplacement1Click(Sender: TObject);
 begin
  Positionform.show;
+end;
+
+procedure TFormCadSol.ItemOrientationClick(Sender: TObject);
+begin
+  FormCadsol3D.Show
 end;
 
 procedure TFormCadSol.ItemParamClick(Sender: TObject);

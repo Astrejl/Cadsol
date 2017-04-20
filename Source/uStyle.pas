@@ -25,7 +25,8 @@ var
   FStyle: TFormStyle;
 
 implementation
-       uses  FCadsol,Main,Parametre,CadTrace3D,Position,uCouleurs,uVisuCadMultiple,HeureCad,Zoom;
+       uses  FCadsol,Main,Parametre,CadTrace3D,Position,uCouleurs,uVisuCadMultiple,HeureCad,Zoom,
+  typeCad;
 {$R *.dfm}
 
 procedure TFormStyle.BitBtn1Click(Sender: TObject);
@@ -39,6 +40,8 @@ begin
   if VisuCadMultipleForm<>nil then VisuCadMultipleForm.Hide;
   HeureDlg.Close;
   ZoomForm.Close;
+  TypeCadDlg.Close;
+
   try
    TStyleManager.TrySetStyle(cbxVclStyles.Text,True);
   finally
@@ -52,14 +55,10 @@ var
 begin
   cbxVclStyles.Clear;
   for StyleName in TStyleManager.StyleNames do
-    cbxVclStyles.Items.Add(StyleName);
-
+    if StyleName<>'Windows' then cbxVclStyles.Items.Add(StyleName);
   cbxVclStyles.ItemIndex := cbxVclStyles.Items.IndexOf(TStyleManager.ActiveStyle.Name);
 end;
 
-
 end.
-
-
 
 

@@ -4,11 +4,11 @@ object VisuCadMultipleForm: TVisuCadMultipleForm
   AlphaBlendValue = 125
   BorderWidth = 1
   Caption = 'Cadran multiple'
-  ClientHeight = 300
-  ClientWidth = 696
+  ClientHeight = 503
+  ClientWidth = 1096
   Color = clWindowFrame
-  Constraints.MinHeight = 300
-  Constraints.MinWidth = 200
+  Constraints.MinHeight = 50
+  Constraints.MinWidth = 50
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
@@ -18,7 +18,6 @@ object VisuCadMultipleForm: TVisuCadMultipleForm
   Menu = MainMenu1
   OldCreateOrder = False
   Position = poDefault
-  ScreenSnap = True
   OnActivate = FormActivate
   OnClick = FormActivate
   OnClose = FormClose
@@ -30,7 +29,7 @@ object VisuCadMultipleForm: TVisuCadMultipleForm
   object LabelDim: TLabel
     Left = 8
     Top = 8
-    Width = 105
+    Width = 3
     Height = 13
     Color = clWindow
     ParentColor = False

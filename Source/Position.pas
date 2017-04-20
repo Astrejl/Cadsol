@@ -3,7 +3,8 @@ unit Position;
 interface
 
 uses
-  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+Winapi.Windows,
+  Winapi.OpenGL, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, Buttons, ExtCtrls, Spin, jpeg, GLWin32Viewer,
   GLScene, GLObjects, GLCadencer, GLGeomObjects, ComCtrls, shellapi,
   GLCoordinates, GLCrossPlatform, GLBaseClasses, Vcl.Mask, FnpNumericEdit,uFormAJL;
